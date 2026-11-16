@@ -1,0 +1,8 @@
+# Runtime data is private and generated on the host.
+little-steps-private/data/*
+!little-steps-private/data/snapshot.json
+*.log
+*.zip
+.env
+.env.*
+!.env.example
