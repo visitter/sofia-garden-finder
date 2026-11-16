@@ -1,0 +1,22 @@
+[Unit]
+Description=Refresh Sofia kindergarten data and publish to GoogieHost
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=little-steps
+Group=little-steps
+WorkingDirectory=/opt/sofia-garden-finder
+EnvironmentFile=/etc/little-steps.env
+Environment=LITTLE_STEPS_DATA_DIR=/var/lib/little-steps
+ExecStart=/usr/bin/python3 /opt/sofia-garden-finder/server/sync.py
+StateDirectory=little-steps
+StateDirectoryMode=0750
+UMask=0027
+TimeoutStartSec=3h
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/little-steps
