@@ -6,3 +6,6 @@ little-steps-private/data/*
 .env
 .env.*
 !.env.example
+
+__pycache__/
+*.pyc
