@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily kindergarten refresh at 06:00 Europe/Sofia
+
+[Timer]
+OnCalendar=*-*-* 06:00:00 Europe/Sofia
+Persistent=true
+AccuracySec=1s
+Unit=little-steps.service
+
+[Install]
+WantedBy=timers.target
