@@ -7,6 +7,7 @@ import io
 import json
 import logging
 import os
+import re
 from pathlib import Path
 import ssl
 import subprocess
@@ -39,22 +40,37 @@ def upload(data, config, factory=ftplib.FTP_TLS):
     ftp = factory(context=context, timeout=60)
     temporary = '.snapshot-' + uuid.uuid4().hex + '.json'
     staged = False
+    stage = 'connect'
     try:
         ftp.connect(host, int(config.get('FTP_PORT','21')))
+        stage = 'login'
         ftp.login(user, password)  # FTP_TLS negotiates TLS before credentials.
+        LOG.info('FTPS login succeeded')
+        stage = 'protect_data_channel'
         ftp.prot_p()              # Encrypt data transfers as well as login.
         ftp.set_pasv(True)
+        stage = 'open_remote_directory'
         ftp.cwd(directory)
+        LOG.info('FTPS remote directory opened')
         staged = True
+        stage = 'upload_temporary_file'
         ftp.storbinary('STOR ' + temporary, io.BytesIO(data))
         digest = hashlib.sha256()
+        stage = 'read_back_temporary_file'
         ftp.retrbinary('RETR ' + temporary, digest.update)
         if digest.digest() != hashlib.sha256(data).digest():
             raise ValueError('Uploaded file verification failed')
         # Never delete the current file first. Failure leaves the previous snapshot intact.
+        stage = 'replace_snapshot'
         ftp.rename(temporary, 'snapshot.json')
         staged = False
         LOG.info('FTPS snapshot published and transfer checksum verified')
+    except Exception as exc:
+        # Report only a fixed stage name and numeric FTP code, never the raw reply.
+        match = re.match(r'^(\d{3})(?:\s|$)', str(exc))
+        code = match.group(1) if match else 'unavailable'
+        LOG.error('FTPS failed at stage=%s code=%s error=%s', stage, code, type(exc).__name__)
+        raise
     finally:
         if staged:
             try: ftp.delete(temporary)
