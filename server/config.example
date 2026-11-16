@@ -1,0 +1,9 @@
+# Copy to /etc/little-steps.env, owned by root, mode 600.
+# Use the FTP hostname shown by GoogieHost, matching its TLS certificate.
+FTP_HOST=REPLACE_WITH_GOOGIEHOST_FTP_HOSTNAME
+FTP_PORT=21
+FTP_USER=REPLACE_WITH_FTP_USERNAME
+FTP_PASSWORD='REPLACE_WITH_FTP_PASSWORD'
+# Path relative to the FTP account root; confirm it in File Manager/FTP client.
+FTP_REMOTE_DIR=/domains/sofia-garden-finder.com/little-steps-private/data
+PHP_BIN=/usr/bin/php
