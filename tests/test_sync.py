@@ -35,4 +35,22 @@ class Tests(unittest.TestCase):
   with self.assertRaises(ValueError):sync.validate_snapshot(b'{"rows":[],"details":{}}')
  def test_config_line_injection_rejected(self):
   with self.assertRaises(ValueError):sync.upload(DATA,dict(CONFIG,FTP_REMOTE_DIR='x\r\nDELE snapshot.json'))
+class Diagnostics(unittest.TestCase):
+ def test_login_denial_logs_only_stage_and_code(self):
+  f=FTP(None,0)
+  def denied(*args):raise sync.ftplib.error_perm('530 user secret rejected')
+  f.login=denied
+  with self.assertLogs('little-steps',level='ERROR') as logs:
+   with self.assertRaises(sync.ftplib.error_perm):sync.upload(DATA,CONFIG,lambda **kw:f)
+  output=' '.join(logs.output)
+  self.assertIn('stage=login code=530',output)
+  self.assertNotIn('secret',output)
+  self.assertEqual(f.files,{'snapshot.json':b'old'})
+ def test_directory_denial_has_distinct_stage(self):
+  f=FTP(None,0)
+  def denied(*args):raise sync.ftplib.error_perm('550 missing directory')
+  f.cwd=denied
+  with self.assertLogs('little-steps',level='ERROR') as logs:
+   with self.assertRaises(sync.ftplib.error_perm):sync.upload(DATA,CONFIG,lambda **kw:f)
+  self.assertIn('stage=open_remote_directory code=550',' '.join(logs.output))
 if __name__=='__main__':unittest.main()
